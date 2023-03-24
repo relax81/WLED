@@ -104,7 +104,9 @@ class UsermodCountdown : public Usermod {
       // do your magic here
       if (millis() - lastTime > 1000) {
         Serial.println("Countdown: I'm alive!");
-        SEGMENT.fill(SEGCOLOR(0));
+
+
+
         lastTime = millis();
       }
     }
@@ -287,7 +289,13 @@ class UsermodCountdown : public Usermod {
      */
     void handleOverlayDraw()
     {
-      //strip.setPixelColor(0, RGBW32(0,0,0,0)) // set the first pixel to black
+      if (enabled) {
+      // strip.setPixelColor(0, RGBW32(0,0,0,0)); // set the first pixel to black
+            for (int i = 0; i < strip.getLengthTotal() * 50 / 100; i++)
+              {
+                strip.setPixelColor(i, strip.getSegment(0).colors[1]);
+              }
+        }      
     }
 
 
