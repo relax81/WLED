@@ -103,7 +103,7 @@ class UsermodCountdown : public Usermod {
       if (!enabled || strip.isUpdating()) return;
       // do your magic here
       if (millis() - lastTime > 1000) {
-        //Serial.println("I'm alive!");
+        Serial.println("Countdown: I'm alive!");
         SEGMENT.fill(SEGCOLOR(0));
         lastTime = millis();
       }
@@ -246,6 +246,7 @@ class UsermodCountdown : public Usermod {
 
       bool configComplete = !top.isNull();
 
+      configComplete &= getJsonValue(top[FPSTR(_enabled)], enabled);
       configComplete &= getJsonValue(top["great"], userVar0);
       configComplete &= getJsonValue(top["testBool"], testBool);
       configComplete &= getJsonValue(top["testULong"], testULong);
