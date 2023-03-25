@@ -13,6 +13,8 @@ class UsermodCountdown : public Usermod {
     unsigned long startTime = 0;
     unsigned long elapsedTime = 0;
     int currentSecond = 0;
+    unsigned long lastUpdate = 0;
+    const unsigned long updateInterval = 1000; // update every 1000ms (1 second)
 
     // Private class members. You can declare variables and functions only accessible to your usermod here
     bool enabled = false;
@@ -69,6 +71,35 @@ class UsermodCountdown : public Usermod {
     //   #endif
 
 
+    void stopwatch() {
+
+      
+      if (currentSecond == 0) {
+        startTime = millis();
+      }
+      elapsedTime = millis() - startTime;
+      currentSecond = elapsedTime / 1000;
+      Serial.print("Start time: ");
+      Serial.println(startTime);
+      Serial.print("Elapsed time: ");
+      Serial.println(elapsedTime);
+      Serial.println("new line");
+
+      // calculate hours, minutes, and seconds
+      int hours = currentSecond / 3600;
+      int minutes = (currentSecond % 3600) / 60;
+      int seconds = currentSecond % 60;
+
+      // check if it's time to update the display
+      unsigned long now = millis();
+      if (now - lastUpdate >= updateInterval) {
+      // format name in hh:mm:ss format
+      sprintf(name, "%01d:%02d:%02d", hours, minutes, seconds);
+      lastUpdate = now; // update the last update time
+      }
+    }
+
+
     // methods called by WLED (can be inlined as they are called only once but if you call them explicitly define them out of class)
     /*
      * setup() is called once at boot. WiFi is not yet connected at this point.
@@ -108,13 +139,15 @@ class UsermodCountdown : public Usermod {
       if (!enabled || strip.isUpdating()) return;
       
       // do your magic here
-      if (millis() - lastTime > 1000) {
-        Serial.println("Countdown: I'm alive!");
-        currentSecond++;
-        // sprintf(const_cast<char*>(name), "%d", currentSecond);
-        sprintf(name, "%d", currentSecond);
-        lastTime = millis();
-      }
+
+      stopwatch();
+      // if (millis() - lastTime > 1000) {
+      //   Serial.println("Countdown: I'm alive!");
+      //   currentSecond++;
+      //   // sprintf(const_cast<char*>(name), "%d", currentSecond);
+      //   sprintf(name, "%d", currentSecond);
+      //   lastTime = millis();
+      // }
 
 
       // new stopwatch
