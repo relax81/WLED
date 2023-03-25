@@ -8,6 +8,12 @@ class UsermodCountdown : public Usermod {
 
   private:
 
+    // 
+    char name[10] = "0";
+    unsigned long startTime = 0;
+    unsigned long elapsedTime = 0;
+    int currentSecond = 0;
+
     // Private class members. You can declare variables and functions only accessible to your usermod here
     bool enabled = false;
     bool initDone = false;
@@ -100,12 +106,24 @@ class UsermodCountdown : public Usermod {
       // if usermod is disabled or called during strip updating just exit
       // NOTE: on very long strips strip.isUpdating() may always return true so update accordingly
       if (!enabled || strip.isUpdating()) return;
+      
       // do your magic here
       if (millis() - lastTime > 1000) {
         Serial.println("Countdown: I'm alive!");
-        
+        currentSecond++;
+        // sprintf(const_cast<char*>(name), "%d", currentSecond);
+        sprintf(name, "%d", currentSecond);
         lastTime = millis();
       }
+
+
+      // new stopwatch
+      // if (currentSecond == 0) {
+      //   startTime = millis();
+      // }
+      // elapsedTime = millis() - startTime;
+      // currentSecond = elapsedTime / 1000;
+      // sprintf(const_cast<char*>(name), "%d", currentSecond);
     }
 
 
@@ -290,34 +308,18 @@ class UsermodCountdown : public Usermod {
       // strip.setPixelColor(0, RGBW32(0,0,0,0)); // set the first pixel to black
 
         effectCurrent = 122;
-
-        // // segment name test start
+        // segment name test start
         Segment& seg = strip.getSegment(0);
-
-        // if (seg.name) { //clear old name
-        // delete[] seg.name;
-        // seg.name = nullptr;
-        // const char * name = "1234";
-        // size_t len = 0;
-        // if (name != nullptr) len = strlen(name);
-        // if (len > 0 && len < 33) {
-        //   seg.name = new char[len+1];
-        //   if (seg.name) strlcpy(seg.name, name, 33);
-        //   } 
-        // }
-        
-        const char * name = "432";
+        delete[] seg.name;
+        seg.name = nullptr;
         size_t len = 0;
         if (name != nullptr) len = strlen(name);
           if (len > 0 && len < 33) {
           seg.name = new char[len+1];
           if (seg.name) strlcpy(seg.name, name, 33);
           } 
-
-
-        // // segment name test end  
+        // segment name test end  
         colorUpdated(CALL_MODE_WS_SEND);
-
         }      
     }
 
