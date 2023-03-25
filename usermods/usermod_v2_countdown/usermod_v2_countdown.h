@@ -103,25 +103,7 @@ class UsermodCountdown : public Usermod {
       // do your magic here
       if (millis() - lastTime > 1000) {
         Serial.println("Countdown: I'm alive!");
-        effectCurrent = 122;
-
-        // segment name test start
-        Segment& seg = strip.getSegment(0);
-
-        if (seg.name) { //clear old name
-        // delete[] seg.name;
-        // seg.name = nullptr;
-        const char * name = "1234";
-        size_t len = 0;
-        if (name != nullptr) len = strlen(name);
-        if (len > 0 && len < 33) {
-          seg.name = new char[len+1];
-          if (seg.name) strlcpy(seg.name, name, 33);
-          } 
-        }
-        // segment name test end  
-        colorUpdated(CALL_MODE_BUTTON);
-
+        
         lastTime = millis();
       }
     }
@@ -306,6 +288,36 @@ class UsermodCountdown : public Usermod {
     {
       if (enabled) {
       // strip.setPixelColor(0, RGBW32(0,0,0,0)); // set the first pixel to black
+
+        effectCurrent = 122;
+
+        // // segment name test start
+        Segment& seg = strip.getSegment(0);
+
+        // if (seg.name) { //clear old name
+        // delete[] seg.name;
+        // seg.name = nullptr;
+        // const char * name = "1234";
+        // size_t len = 0;
+        // if (name != nullptr) len = strlen(name);
+        // if (len > 0 && len < 33) {
+        //   seg.name = new char[len+1];
+        //   if (seg.name) strlcpy(seg.name, name, 33);
+        //   } 
+        // }
+        
+        const char * name = "432";
+        size_t len = 0;
+        if (name != nullptr) len = strlen(name);
+          if (len > 0 && len < 33) {
+          seg.name = new char[len+1];
+          if (seg.name) strlcpy(seg.name, name, 33);
+          } 
+
+
+        // // segment name test end  
+        colorUpdated(CALL_MODE_WS_SEND);
+
         }      
     }
 
