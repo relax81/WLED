@@ -189,8 +189,8 @@
 #include "../usermods/pwm_outputs/usermod_pwm_outputs.h"
 #endif
 
-#ifdef USERMOD_COUNTDOWN
-#include "../usermods/usermod_v2_countdown/usermod_v2_countdown.h"
+#ifdef USERMOD_TIMER
+#include "../usermods/usermod_v2_timer/usermod_v2_timer.h"
 #endif
 
 
@@ -362,7 +362,7 @@ void registerUsermods()
   usermods.add(new ShtUsermod());
   #endif
 
-  #ifdef USERMOD_COUNTDOWN
-  usermods.add(new UsermodCountdown());
+  #ifdef USERMOD_TIMER
+  usermods.add(new UsermodTimer());
   #endif
 }

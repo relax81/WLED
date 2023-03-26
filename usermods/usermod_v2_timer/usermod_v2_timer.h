@@ -1,16 +1,25 @@
+/// Notes
+// {"UsermodTimer": {"stopWatch": true}}  to start the stopwatch
+// {"UsermodTimer": {"stopWatch": true, "stopWatchReset": true}} reset the stopwatch
+
 #pragma once
 
 #include "wled.h"
 
 
 //class name. Use something descriptive and leave the ": public Usermod" part :)
-class UsermodCountdown : public Usermod {
+class UsermodTimer : public Usermod {
 
   private:
 
+    // Private class members. You can declare variables and functions only accessible to your usermod here
+    bool enabled = false;
+    bool initDone = false;
+    unsigned long lastTime = 0;
+
     // Stopwatch
-    bool stopWatchEnabled = true;
-    bool StopWatchReset = true;
+    bool stopWatchEnabled = false;
+    bool stopWatchReset = true;
     char name[10] = "0";
     unsigned long startTime = 0;
     unsigned long elapsedTime = 0;
@@ -18,11 +27,6 @@ class UsermodCountdown : public Usermod {
     unsigned long lastUpdate = 0;
     const unsigned long updateInterval = 1000; // update every 1000ms (1 second)
     
-
-    // Private class members. You can declare variables and functions only accessible to your usermod here
-    bool enabled = false;
-    bool initDone = false;
-    unsigned long lastTime = 0;
 
     // set your config variables to their boot default value (this can also be done in readFromConfig() or a constructor if you prefer)
     bool testBool = false;
@@ -40,7 +44,7 @@ class UsermodCountdown : public Usermod {
     static const char _enabled[];
 
 
-    // any private methods should go here (non-inline methosd should be defined out of class)
+    // any private methods should go here (non-inline methods should be defined out of class)
     void publishMqtt(const char* state, bool retain = false); // example for publishing MQTT message
 
 
@@ -75,19 +79,14 @@ class UsermodCountdown : public Usermod {
 
 
     void stopwatch() {
-        if (StopWatchReset == true) {
+        if (stopWatchReset == true) {
           effectCurrent = 122;
           startTime = millis();
           Serial.println("current second = 0");
-          StopWatchReset = false;
+          stopWatchReset = false;
         }
         elapsedTime = millis() - startTime;
         currentSecond = elapsedTime / 1000;
-        Serial.print("Start time: ");
-        Serial.println(startTime);
-        Serial.print("Elapsed time: ");
-        Serial.println(elapsedTime);
-        Serial.println("new line");
 
         // calculate hours, minutes, and seconds
         int hours = currentSecond / 3600;
@@ -98,10 +97,11 @@ class UsermodCountdown : public Usermod {
         unsigned long now = millis();
         if (now - lastUpdate >= updateInterval) {
           if (hours > 0) {
-            // format name in hh:mm:ss format
+            // format name in hh:mm format
             sprintf(name, "%02d:%02d", hours, minutes);
             }
           else {
+            // format in mm:ss format 
             sprintf(name, "%02d:%02d", minutes, seconds);
           }
         lastUpdate = now; // update the last update time
@@ -192,6 +192,8 @@ class UsermodCountdown : public Usermod {
       if (usermod.isNull()) usermod = root.createNestedObject(FPSTR(_name));
 
       //usermod["user0"] = userVar0;
+      usermod["stopWatch"] = stopWatchEnabled;
+      usermod["stopWatchReset"] = stopWatchReset;
     }
 
 
@@ -207,6 +209,8 @@ class UsermodCountdown : public Usermod {
       if (!usermod.isNull()) {
         // expect JSON usermod data in usermod name object: {"ExampleUsermod:{"user0":10}"}
         userVar0 = usermod["user0"] | userVar0; //if "user0" key exists in JSON, update, else keep old value
+        stopWatchEnabled = usermod["stopWatch"] | stopWatchEnabled;
+        stopWatchReset = usermod["stopWatchReset"] | stopWatchReset;
       }
       // you can as well check WLED state JSON keys
       //if (root["bri"] == 255) Serial.println(F("Don't burn down your garage!"));
@@ -253,6 +257,7 @@ class UsermodCountdown : public Usermod {
       JsonObject top = root.createNestedObject(FPSTR(_name));
       top[FPSTR(_enabled)] = enabled;
       //save these vars persistently whenever settings are saved
+      top["stopWatch"] = stopWatchEnabled;
       top["great"] = userVar0;
       top["testBool"] = testBool;
       top["testInt"] = testInt;
@@ -291,6 +296,7 @@ class UsermodCountdown : public Usermod {
       bool configComplete = !top.isNull();
 
       configComplete &= getJsonValue(top[FPSTR(_enabled)], enabled);
+      configComplete &= getJsonValue(top["stopWatch"], stopWatchEnabled);
       configComplete &= getJsonValue(top["great"], userVar0);
       configComplete &= getJsonValue(top["testBool"], testBool);
       configComplete &= getJsonValue(top["testULong"], testULong);
@@ -431,13 +437,13 @@ class UsermodCountdown : public Usermod {
 
 
 // add more strings here to reduce flash memory usage
-const char UsermodCountdown::_name[]    PROGMEM = "UsermodCountdown";
-const char UsermodCountdown::_enabled[] PROGMEM = "enabled";
+const char UsermodTimer::_name[]    PROGMEM = "UsermodTimer";
+const char UsermodTimer::_enabled[] PROGMEM = "enabled";
 
 
 // implementation of non-inline member methods
 
-void UsermodCountdown::publishMqtt(const char* state, bool retain)
+void UsermodTimer::publishMqtt(const char* state, bool retain)
 {
 #ifndef WLED_DISABLE_MQTT
   //Check if MQTT Connected, otherwise it will crash the 8266
