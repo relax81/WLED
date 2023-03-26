@@ -8,13 +8,16 @@ class UsermodCountdown : public Usermod {
 
   private:
 
-    // 
+    // Stopwatch
+    bool stopWatchEnabled = true;
+    bool StopWatchReset = true;
     char name[10] = "0";
     unsigned long startTime = 0;
     unsigned long elapsedTime = 0;
-    int currentSecond = 0;
+    unsigned long currentSecond = 0;
     unsigned long lastUpdate = 0;
     const unsigned long updateInterval = 1000; // update every 1000ms (1 second)
+    
 
     // Private class members. You can declare variables and functions only accessible to your usermod here
     bool enabled = false;
@@ -72,31 +75,37 @@ class UsermodCountdown : public Usermod {
 
 
     void stopwatch() {
+        if (StopWatchReset == true) {
+          effectCurrent = 122;
+          startTime = millis();
+          Serial.println("current second = 0");
+          StopWatchReset = false;
+        }
+        elapsedTime = millis() - startTime;
+        currentSecond = elapsedTime / 1000;
+        Serial.print("Start time: ");
+        Serial.println(startTime);
+        Serial.print("Elapsed time: ");
+        Serial.println(elapsedTime);
+        Serial.println("new line");
 
-      
-      if (currentSecond == 0) {
-        startTime = millis();
-      }
-      elapsedTime = millis() - startTime;
-      currentSecond = elapsedTime / 1000;
-      Serial.print("Start time: ");
-      Serial.println(startTime);
-      Serial.print("Elapsed time: ");
-      Serial.println(elapsedTime);
-      Serial.println("new line");
+        // calculate hours, minutes, and seconds
+        int hours = currentSecond / 3600;
+        int minutes = (currentSecond % 3600) / 60;
+        int seconds = currentSecond % 60;
 
-      // calculate hours, minutes, and seconds
-      int hours = currentSecond / 3600;
-      int minutes = (currentSecond % 3600) / 60;
-      int seconds = currentSecond % 60;
-
-      // check if it's time to update the display
-      unsigned long now = millis();
-      if (now - lastUpdate >= updateInterval) {
-      // format name in hh:mm:ss format
-      sprintf(name, "%01d:%02d:%02d", hours, minutes, seconds);
-      lastUpdate = now; // update the last update time
-      }
+        // check if it's time to update the display
+        unsigned long now = millis();
+        if (now - lastUpdate >= updateInterval) {
+          if (hours > 0) {
+            // format name in hh:mm:ss format
+            sprintf(name, "%02d:%02d", hours, minutes);
+            }
+          else {
+            sprintf(name, "%02d:%02d", minutes, seconds);
+          }
+        lastUpdate = now; // update the last update time
+        }
     }
 
 
@@ -139,24 +148,9 @@ class UsermodCountdown : public Usermod {
       if (!enabled || strip.isUpdating()) return;
       
       // do your magic here
-
-      stopwatch();
-      // if (millis() - lastTime > 1000) {
-      //   Serial.println("Countdown: I'm alive!");
-      //   currentSecond++;
-      //   // sprintf(const_cast<char*>(name), "%d", currentSecond);
-      //   sprintf(name, "%d", currentSecond);
-      //   lastTime = millis();
-      // }
-
-
-      // new stopwatch
-      // if (currentSecond == 0) {
-      //   startTime = millis();
-      // }
-      // elapsedTime = millis() - startTime;
-      // currentSecond = elapsedTime / 1000;
-      // sprintf(const_cast<char*>(name), "%d", currentSecond);
+      if (stopWatchEnabled == true) {
+        stopwatch();
+      }
     }
 
 
@@ -340,7 +334,7 @@ class UsermodCountdown : public Usermod {
       if (enabled) {
       // strip.setPixelColor(0, RGBW32(0,0,0,0)); // set the first pixel to black
 
-        effectCurrent = 122;
+        
         // segment name test start
         Segment& seg = strip.getSegment(0);
         delete[] seg.name;
