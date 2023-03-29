@@ -1,5 +1,6 @@
 /// Notes
 // {"UsermodTimer": {"stopWatch": true}}  to start the stopwatch
+// {"UsermodTimer": {"stopWatchPause": true}}  pause stopwatch
 // {"UsermodTimer": {"stopWatch": true, "stopWatchReset": true}} reset the stopwatch
 
 #pragma once
@@ -20,7 +21,7 @@ class UsermodTimer : public Usermod {
     // Stopwatch
     bool stopWatchEnabled = false;
     bool stopWatchReset = true;
-    bool stopWatchToggle = false;
+    bool stopWatchPause = false;
     char name[10] = "0";
     unsigned long startTime = 0;
     unsigned long elapsedTime = 0;
@@ -163,9 +164,9 @@ class UsermodTimer : public Usermod {
       if (stopWatchEnabled == true) {
         stopwatch();
       }
-      if (stopWatchToggle == true) {
+      if (stopWatchPause == true) {
         pauseStopwatch();
-        stopWatchToggle = false;
+        stopWatchPause = false;
       }
     }
 
@@ -210,7 +211,7 @@ class UsermodTimer : public Usermod {
       //usermod["user0"] = userVar0;
       usermod["stopWatch"] = stopWatchEnabled;
       usermod["stopWatchReset"] = stopWatchReset;
-      usermod["stopWatchToggle"] = stopWatchToggle;
+      usermod["stopWatchPause"] = stopWatchPause;
     }
 
 
@@ -228,7 +229,7 @@ class UsermodTimer : public Usermod {
         userVar0 = usermod["user0"] | userVar0; //if "user0" key exists in JSON, update, else keep old value
         stopWatchEnabled = usermod["stopWatch"] | stopWatchEnabled;
         stopWatchReset = usermod["stopWatchReset"] | stopWatchReset;
-        stopWatchToggle = usermod["stopWatchToggle"] | stopWatchToggle;
+        stopWatchPause = usermod["stopWatchPause"] | stopWatchPause;
       }
       // you can as well check WLED state JSON keys
       //if (root["bri"] == 255) Serial.println(F("Don't burn down your garage!"));
