@@ -23,11 +23,23 @@ class UsermodTimer : public Usermod {
     bool stopWatchReset = true;
     bool stopWatchPause = false;
     char name[10] = "0";
-    unsigned long startTime = 0;
+    unsigned long stopwatchStartTime = 0;
     unsigned long elapsedTime = 0;
-    unsigned long currentSecond = 0;
-    unsigned long lastUpdate = 0;
+    unsigned long stopwatchCurrentSecond = 0;
+    unsigned long stopwatchLastUpdate = 0;
     const unsigned long updateInterval = 1000; // update every 1000ms (1 second)
+
+    // Countdown
+    bool countdownEnabled = false;
+    bool countdownStart = true;
+    bool countdownPause = false;
+    bool countdownCountUpAfterFinish = false;
+    unsigned long countdownStartTime = 0;
+    unsigned long countdownTime = 90000;
+    unsigned long countdownTargetTime = 0;
+    signed long countdownremainingTime = 0;
+    signed long countdownCurrentSecond = 0;
+    unsigned long countdownLastUpdate = 0;
     
 
     // set your config variables to their boot default value (this can also be done in readFromConfig() or a constructor if you prefer)
@@ -83,25 +95,25 @@ class UsermodTimer : public Usermod {
     void stopwatch() {
         if (stopWatchReset == true) {
           effectCurrent = 122;
-          startTime = millis();
+          stopwatchStartTime = millis();
           Serial.println("current second = 0");
           stopWatchReset = false;
         }
         
         if (stopWatchEnabled == true) {
-          elapsedTime = millis() - startTime;
+          elapsedTime = millis() - stopwatchStartTime;
         }
         
-        currentSecond = elapsedTime / 1000;
+        stopwatchCurrentSecond = elapsedTime / 1000;
 
         // calculate hours, minutes, and seconds
-        int hours = currentSecond / 3600;
-        int minutes = (currentSecond % 3600) / 60;
-        int seconds = currentSecond % 60;
+        int hours = stopwatchCurrentSecond / 3600;
+        int minutes = (stopwatchCurrentSecond % 3600) / 60;
+        int seconds = stopwatchCurrentSecond % 60;
 
         // check if it's time to update the display
         unsigned long now = millis();
-        if (now - lastUpdate >= updateInterval) {
+        if (now - stopwatchLastUpdate >= updateInterval) {
           if (hours > 0) {
             // format name in hh:mm format
             sprintf(name, "%02d:%02d", hours, minutes);
@@ -110,15 +122,76 @@ class UsermodTimer : public Usermod {
             // format in mm:ss format 
             sprintf(name, "%02d:%02d", minutes, seconds);
           }
-        lastUpdate = now; // update the last update time
+        stopwatchLastUpdate = now; // update the last update time
         }
     }
 
     void pauseStopwatch(){
       stopWatchEnabled = !stopWatchEnabled;
       if (stopWatchEnabled) {
-        startTime = millis() - elapsedTime;
+        stopwatchStartTime = millis() - elapsedTime;
       }
+    }
+
+    void countdown() {
+      unsigned long now = millis();
+
+      signed long temptime;
+      temptime = countdownTargetTime - millis();
+
+      if (countdownStart == true) {
+          effectCurrent = 122;
+          countdownStartTime = millis();
+          countdownTargetTime = countdownStartTime + countdownTime;
+          countdownStart = false;
+        }
+
+      if (countdownEnabled == true) {
+          if (countdownTargetTime > now) {
+            countdownremainingTime = countdownTargetTime - millis();
+          }
+          else if (countdownCountUpAfterFinish == true) {
+            countdownremainingTime = millis() - countdownTargetTime;
+          }
+          else {
+            countdownremainingTime = 0;
+          }
+        }
+
+        countdownCurrentSecond = countdownremainingTime / 1000;
+
+        // calculate hours, minutes, and seconds
+        int countdownHours = countdownCurrentSecond / 3600;
+        int countdownMinutes = (countdownCurrentSecond % 3600) / 60;
+        int countdownSeconds = countdownCurrentSecond % 60;
+
+        
+          // check if it's time to update the display
+          if (now - countdownLastUpdate >= updateInterval) {
+            if (countdownHours > 0) {
+              // format name in hh:mm format
+              sprintf(name, "%02d:%02d", countdownHours, countdownMinutes);
+              }
+            else {
+              // format in mm:ss format 
+              sprintf(name, "%02d:%02d", countdownMinutes, countdownSeconds);
+            }
+          countdownLastUpdate = now; // update the last update time
+          Serial.print("countdown remaining time: ");
+          Serial.println(countdownremainingTime);
+          Serial.print("countdown current second: ");
+          Serial.println(countdownCurrentSecond);
+          Serial.print("count down target time: ");
+          Serial.println(countdownTargetTime);
+          Serial.print("hours: ");
+          Serial.println(countdownHours);
+          Serial.print("minutes: ");
+          Serial.println(countdownMinutes);
+          Serial.print("seconds: ");
+          Serial.println(countdownSeconds);
+          Serial.print("temp time:" );
+          Serial.println(temptime);
+          }
     }
 
 
@@ -168,6 +241,9 @@ class UsermodTimer : public Usermod {
         pauseStopwatch();
         stopWatchPause = false;
       }
+      if (countdownEnabled == true) {
+        countdown();
+      }
     }
 
 
@@ -212,6 +288,8 @@ class UsermodTimer : public Usermod {
       usermod["stopWatch"] = stopWatchEnabled;
       usermod["stopWatchReset"] = stopWatchReset;
       usermod["stopWatchPause"] = stopWatchPause;
+      usermod["countdown"] = countdownEnabled;
+      usermod["countdownCountUp"] = countdownCountUpAfterFinish;
     }
 
 
@@ -230,6 +308,8 @@ class UsermodTimer : public Usermod {
         stopWatchEnabled = usermod["stopWatch"] | stopWatchEnabled;
         stopWatchReset = usermod["stopWatchReset"] | stopWatchReset;
         stopWatchPause = usermod["stopWatchPause"] | stopWatchPause;
+        countdownEnabled = usermod["countdown"] | countdownEnabled;
+        countdownCountUpAfterFinish = usermod["countdownCountUp"] | countdownCountUpAfterFinish;
       }
       // you can as well check WLED state JSON keys
       //if (root["bri"] == 255) Serial.println(F("Don't burn down your garage!"));
@@ -277,6 +357,7 @@ class UsermodTimer : public Usermod {
       top[FPSTR(_enabled)] = enabled;
       //save these vars persistently whenever settings are saved
       top["stopWatch"] = stopWatchEnabled;
+      top["countdown"] = countdownEnabled; 
       top["great"] = userVar0;
       top["testBool"] = testBool;
       top["testInt"] = testInt;
@@ -316,6 +397,7 @@ class UsermodTimer : public Usermod {
 
       configComplete &= getJsonValue(top[FPSTR(_enabled)], enabled);
       configComplete &= getJsonValue(top["stopWatch"], stopWatchEnabled);
+      configComplete &= getJsonValue(top["countdown"], countdownEnabled);
       configComplete &= getJsonValue(top["great"], userVar0);
       configComplete &= getJsonValue(top["testBool"], testBool);
       configComplete &= getJsonValue(top["testULong"], testULong);
