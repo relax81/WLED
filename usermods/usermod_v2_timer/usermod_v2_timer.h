@@ -6,9 +6,10 @@
 // {"UsermodTimer": {"stopWatchPause": true}}  pause stopwatch
 // {"UsermodTimer": {"stopWatchEnable": true, "stopWatchReset": true}} reset the stopwatch
 /// Countdown ///
-// {"UsermodTimer": {"countdownEnable": true, "countdownMultiplicator": 1, "countdownStart": true, "countdownTime": "001930", "countdownCountUp": false}}
+// {"UsermodTimer": {"countdownEnable": true, "countdownMultiplicator": 1, "countdownStart": true, "countdownTime": "001930"}}
 // countdownMultiplicator can slow down or speed up the countdown speed
-// countdownCountUp starts counting up again once the countdown is finished if enabled
+// {"UsermodTimer": {"countdownPause": true}} pauses the countdown
+
 
 #pragma once
 
@@ -41,11 +42,11 @@ class UsermodTimer : public Usermod {
     bool countdownEnabled = false;
     bool countdownStart = false;
     bool countdownPause = false;
-    bool countdownCountUpAfterFinish = false;
     bool countdownFinished = false;
     float countdownMultiplicator = 1;
     unsigned long countdownStartTime = 0;
-    unsigned long countdownTime = 90000;
+    unsigned long countdownPreviousTime = 000000;
+    unsigned long countdownTime = 000000;
     String countdownTimeJson = "000000"; //hhmmss
     unsigned long countdownTargetTime = 0;
     signed long countdownremainingTime = 0;
@@ -153,47 +154,46 @@ class UsermodTimer : public Usermod {
     void countdown() {
       unsigned long now = millis();
       
-        if (effectCurrent != 122) {
+      if (effectCurrent != 122) {
           effectOld = effectCurrent;
           effectCurrent = 122;
         }
 
       // Add the following lines to handle potential millis() overflow
       if (now < countdownLastUpdate) {
-        countdownStartTime += 4294967295ul; // add 2^32-1 to the start time
-        countdownTargetTime += 4294967295ul; // add 2^32-1 to the target time
+        countdownremainingTime += 4294967295ul; // add 2^32-1 to the start time
+        }
+
+      int hours, minutes, seconds;
+      hours = countdownTimeJson.substring(0, 2).toInt();
+      minutes = countdownTimeJson.substring(2, 4).toInt();
+      seconds = countdownTimeJson.substring(4, 6).toInt();
+      countdownTime = (hours * 3600 + minutes * 60 + seconds) * 1000UL;
+
+      if (countdownTime != countdownPreviousTime){
+        countdownremainingTime = countdownTime;
+        countdownPreviousTime = countdownTime;
       }
 
-
       if (countdownStart == true) {
-          int hours, minutes, seconds;
-          hours = countdownTimeJson.substring(0, 2).toInt();
-          minutes = countdownTimeJson.substring(2, 4).toInt();
-          seconds = countdownTimeJson.substring(4, 6).toInt();
-          countdownTime = (hours * 3600 + minutes * 60 + seconds) * 1000UL;
-          countdownStartTime = now;
-          countdownTargetTime = countdownStartTime + countdownTime;
-          countdownremainingTime = countdownTargetTime - now;
+          countdownremainingTime = countdownTime; 
+          countdownPreviousTime = countdownTime;
           countdownPreviousMillis = 0;
           countdownFinished = false;
+          countdownPause = false;
           countdownStart = false;
         }
 
-      if (countdownEnabled == true) {
-
-        if ((now - countdownPreviousMillis >= 1000 / countdownMultiplicator) && (countdownFinished == false)){
+      if ((now - countdownPreviousMillis >= 1000 / countdownMultiplicator) && (countdownFinished == false) && (countdownPause == false)){
           countdownremainingTime = countdownremainingTime - 1000;
           if (countdownremainingTime <= 0) {
             countdownFinished = true;
             countdownMultiplicator = 1;
+            countdownremainingTime = 0;
           }
           countdownPreviousMillis = now;
         } 
-        else if ((now - countdownPreviousMillis >= 1000) && (countdownFinished == true) && (countdownCountUpAfterFinish == true)){
-          countdownremainingTime = countdownremainingTime + 1000;
-          countdownPreviousMillis = now;
-          }
-        }
+
 
         countdownCurrentSecond = (countdownremainingTime / 1000);
 
@@ -313,9 +313,10 @@ class UsermodTimer : public Usermod {
       usermod["stopWatchPause"] = stopWatchPause;
       usermod["countdownEnable"] = countdownEnabled;
       usermod["countdownStart"] = countdownStart;
-      usermod["countdownCountUp"] = countdownCountUpAfterFinish;
       usermod["countdownTime"] = countdownTimeJson;
       usermod["countdownMultiplicator"] = countdownMultiplicator;
+      usermod["countdownPause"] = countdownPause;
+      usermod["countdownFinished"] = countdownFinished;
     }
 
 
@@ -336,9 +337,9 @@ class UsermodTimer : public Usermod {
         stopWatchPause = usermod["stopWatchPause"] | stopWatchPause;
         countdownEnabled = usermod["countdownEnable"] | countdownEnabled;
         countdownStart = usermod["countdownStart"] | countdownStart;
-        countdownCountUpAfterFinish = usermod["countdownCountUp"] | countdownCountUpAfterFinish;
         countdownTimeJson = usermod["countdownTime"] | countdownTimeJson;
         countdownMultiplicator = usermod["countdownMultiplicator"] | countdownMultiplicator;
+        countdownPause = usermod["countdownPause"] | countdownPause;
       }
       // you can as well check WLED state JSON keys
       //if (root["bri"] == 255) Serial.println(F("Don't burn down your garage!"));
