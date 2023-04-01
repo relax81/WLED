@@ -1,7 +1,14 @@
 /// Notes
-// {"UsermodTimer": {"stopWatch": true}}  to start the stopwatch
+/// Change Text Color ///
+// {"seg":{"col":[[0,255,255],[0,0,0],[0,0,0]]}} changes the text color
+/// Stopwatch ///
+// {"UsermodTimer": {"stopWatchEnable": true}}  to start the stopwatch
 // {"UsermodTimer": {"stopWatchPause": true}}  pause stopwatch
-// {"UsermodTimer": {"stopWatch": true, "stopWatchReset": true}} reset the stopwatch
+// {"UsermodTimer": {"stopWatchEnable": true, "stopWatchReset": true}} reset the stopwatch
+/// Countdown ///
+// {"UsermodTimer": {"countdownEnable": true, "countdownMultiplicator": 1, "countdownStart": true, "countdownTime": "001930", "countdownCountUp": false}}
+// countdownMultiplicator can slow down or speed up the countdown speed
+// countdownCountUp starts counting up again once the countdown is finished if enabled
 
 #pragma once
 
@@ -35,6 +42,7 @@ class UsermodTimer : public Usermod {
     bool countdownStart = false;
     bool countdownPause = false;
     bool countdownCountUpAfterFinish = false;
+    bool countdownFinished = false;
     float countdownMultiplicator = 1;
     unsigned long countdownStartTime = 0;
     unsigned long countdownTime = 90000;
@@ -42,6 +50,7 @@ class UsermodTimer : public Usermod {
     unsigned long countdownTargetTime = 0;
     signed long countdownremainingTime = 0;
     signed long countdownCurrentSecond = 0;
+    unsigned long countdownPreviousMillis = 0;
     unsigned long countdownLastUpdate = 0;
     
 
@@ -164,19 +173,25 @@ class UsermodTimer : public Usermod {
           countdownTime = (hours * 3600 + minutes * 60 + seconds) * 1000UL;
           countdownStartTime = now;
           countdownTargetTime = countdownStartTime + countdownTime;
+          countdownremainingTime = countdownTargetTime - now;
+          countdownPreviousMillis = 0;
+          countdownFinished = false;
           countdownStart = false;
         }
 
       if (countdownEnabled == true) {
 
-          if (countdownTargetTime > now) {
-            countdownremainingTime = countdownTargetTime - now;
+        if ((now - countdownPreviousMillis >= 1000 / countdownMultiplicator) && (countdownFinished == false)){
+          countdownremainingTime = countdownremainingTime - 1000;
+          if (countdownremainingTime <= 0) {
+            countdownFinished = true;
+            countdownMultiplicator = 1;
           }
-          else if (countdownCountUpAfterFinish == true) {
-            countdownremainingTime = now - countdownTargetTime;
-          }
-          else {
-            countdownremainingTime = 0;
+          countdownPreviousMillis = now;
+        } 
+        else if ((now - countdownPreviousMillis >= 1000) && (countdownFinished == true) && (countdownCountUpAfterFinish == true)){
+          countdownremainingTime = countdownremainingTime + 1000;
+          countdownPreviousMillis = now;
           }
         }
 
@@ -293,10 +308,10 @@ class UsermodTimer : public Usermod {
       if (usermod.isNull()) usermod = root.createNestedObject(FPSTR(_name));
 
       //usermod["user0"] = userVar0;
-      usermod["stopWatch"] = stopWatchEnabled;
+      usermod["stopWatchEnable"] = stopWatchEnabled;
       usermod["stopWatchReset"] = stopWatchReset;
       usermod["stopWatchPause"] = stopWatchPause;
-      usermod["countdown"] = countdownEnabled;
+      usermod["countdownEnable"] = countdownEnabled;
       usermod["countdownStart"] = countdownStart;
       usermod["countdownCountUp"] = countdownCountUpAfterFinish;
       usermod["countdownTime"] = countdownTimeJson;
@@ -316,10 +331,10 @@ class UsermodTimer : public Usermod {
       if (!usermod.isNull()) {
         // expect JSON usermod data in usermod name object: {"ExampleUsermod:{"user0":10}"}
         userVar0 = usermod["user0"] | userVar0; //if "user0" key exists in JSON, update, else keep old value
-        stopWatchEnabled = usermod["stopWatch"] | stopWatchEnabled;
+        stopWatchEnabled = usermod["stopWatchEnable"] | stopWatchEnabled;
         stopWatchReset = usermod["stopWatchReset"] | stopWatchReset;
         stopWatchPause = usermod["stopWatchPause"] | stopWatchPause;
-        countdownEnabled = usermod["countdown"] | countdownEnabled;
+        countdownEnabled = usermod["countdownEnable"] | countdownEnabled;
         countdownStart = usermod["countdownStart"] | countdownStart;
         countdownCountUpAfterFinish = usermod["countdownCountUp"] | countdownCountUpAfterFinish;
         countdownTimeJson = usermod["countdownTime"] | countdownTimeJson;
