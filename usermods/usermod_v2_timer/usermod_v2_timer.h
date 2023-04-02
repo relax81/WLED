@@ -61,10 +61,6 @@ class UsermodTimer : public Usermod {
     float testFloat = 42.42;
     String testString = "Forty-Two";
 
-    // These config variables have defaults set inside readFromConfig()
-    int testInt;
-    long testLong;
-    int8_t testPins[2];
 
     // string that are used multiple time (this will save some flash memory)
     static const char _name[];
@@ -388,16 +384,8 @@ class UsermodTimer : public Usermod {
       //save these vars persistently whenever settings are saved
       top["stopWatch"] = stopWatchEnabled;
       top["countdown"] = countdownEnabled; 
-      top["great"] = userVar0;
-      top["testBool"] = testBool;
-      top["testInt"] = testInt;
-      top["testLong"] = testLong;
-      top["testULong"] = testULong;
-      top["testFloat"] = testFloat;
-      top["testString"] = testString;
-      JsonArray pinArray = top.createNestedArray("pin");
-      pinArray.add(testPins[0]);
-      pinArray.add(testPins[1]); 
+      top["Countdown Time"] = countdownTimeJson;
+      top["Countdown Multiplicator"] = countdownMultiplicator;
     }
 
 
@@ -428,20 +416,8 @@ class UsermodTimer : public Usermod {
       configComplete &= getJsonValue(top[FPSTR(_enabled)], enabled);
       configComplete &= getJsonValue(top["stopWatch"], stopWatchEnabled);
       configComplete &= getJsonValue(top["countdown"], countdownEnabled);
-      configComplete &= getJsonValue(top["great"], userVar0);
-      configComplete &= getJsonValue(top["testBool"], testBool);
-      configComplete &= getJsonValue(top["testULong"], testULong);
-      configComplete &= getJsonValue(top["testFloat"], testFloat);
-      configComplete &= getJsonValue(top["testString"], testString);
-
-      // A 3-argument getJsonValue() assigns the 3rd argument as a default value if the Json value is missing
-      configComplete &= getJsonValue(top["testInt"], testInt, 42);  
-      configComplete &= getJsonValue(top["testLong"], testLong, -42424242);
-
-      // "pin" fields have special handling in settings page (or some_pin as well)
-      configComplete &= getJsonValue(top["pin"][0], testPins[0], -1);
-      configComplete &= getJsonValue(top["pin"][1], testPins[1], -1);
-
+      configComplete &= getJsonValue(top["Countdown Time"], countdownTimeJson);
+      configComplete &= getJsonValue(top["Countdown Multiplicator"], countdownMultiplicator);
       return configComplete;
     }
 
@@ -453,11 +429,7 @@ class UsermodTimer : public Usermod {
      */
     void appendConfigData()
     {
-      oappend(SET_F("addInfo('")); oappend(String(FPSTR(_name)).c_str()); oappend(SET_F(":great")); oappend(SET_F("',1,'<i>(this is a great config value)</i>');"));
-      oappend(SET_F("addInfo('")); oappend(String(FPSTR(_name)).c_str()); oappend(SET_F(":testString")); oappend(SET_F("',1,'enter any string you want');"));
-      oappend(SET_F("dd=addDropdown('")); oappend(String(FPSTR(_name)).c_str()); oappend(SET_F("','testInt');"));
-      oappend(SET_F("addOption(dd,'Nothing',0);"));
-      oappend(SET_F("addOption(dd,'Everything',42);"));
+      oappend(SET_F("addInfo('")); oappend(String(FPSTR(_name)).c_str()); oappend(SET_F(":Countdown Time")); oappend(SET_F("',1,'<i>(hhmmss format)</i>');"));
     }
 
 
