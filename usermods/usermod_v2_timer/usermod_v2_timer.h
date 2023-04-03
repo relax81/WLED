@@ -105,12 +105,7 @@ class UsermodTimer : public Usermod {
           effectCurrent = 122;
         }
 
-        if (stopWatchReset == true) {
-          stopwatchStartTime = now;
-          Serial.println("current second = 0");
-          stopWatchReset = false;
-        }
-        
+      
         if ((timerMode == 1) && (stopWatchPaused == false)) {
           elapsedTime = now - stopwatchStartTime;
         }
@@ -136,10 +131,7 @@ class UsermodTimer : public Usermod {
 
     void pauseStopwatch(){
       stopWatchPaused = !stopWatchPaused;
-      Serial.println(stopWatchPaused);
-      if (stopWatchPaused) {
-        stopwatchStartTime = millis() - elapsedTime;
-      }
+      stopwatchStartTime = now - elapsedTime;
     }
 
     void countdown() {
@@ -266,6 +258,12 @@ class UsermodTimer : public Usermod {
       if (stopWatchPause == true && timerMode == 1) {
         pauseStopwatch();
         stopWatchPause = false;
+      }
+
+      if (stopWatchReset == true) {
+        stopwatchStartTime = now;
+        stopWatchPaused = false;
+        stopWatchReset = false;
       }
     }
 
