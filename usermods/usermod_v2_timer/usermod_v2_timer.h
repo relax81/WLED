@@ -36,7 +36,7 @@ class UsermodTimer : public Usermod {
     unsigned long elapsedTime = 0;
     unsigned long stopwatchCurrentSecond = 0;
     unsigned long stopwatchLastUpdate = 0;
-    const unsigned long updateInterval = 40; // update every 1000ms (1 second)
+    const unsigned long updateInterval = 10; // update every 1000ms (1 second)
 
     // Countdown
     bool countdownEnabled = false;
@@ -54,13 +54,6 @@ class UsermodTimer : public Usermod {
     unsigned long countdownPreviousMillis = 0;
     unsigned long countdownLastUpdate = 0;
     
-
-    // set your config variables to their boot default value (this can also be done in readFromConfig() or a constructor if you prefer)
-    bool testBool = false;
-    unsigned long testULong = 42424242;
-    float testFloat = 42.42;
-    String testString = "Forty-Two";
-
 
     // string that are used multiple time (this will save some flash memory)
     static const char _name[];
@@ -256,7 +249,7 @@ class UsermodTimer : public Usermod {
       if (stopWatchEnabled == true) {
         stopwatch();
       }
-      if (stopWatchPause == true) {
+      if (stopWatchPause == true && stopWatchEnabled == true) {
         pauseStopwatch();
         stopWatchPause = false;
       }
@@ -327,7 +320,6 @@ class UsermodTimer : public Usermod {
       JsonObject usermod = root[FPSTR(_name)];
       if (!usermod.isNull()) {
         // expect JSON usermod data in usermod name object: {"ExampleUsermod:{"user0":10}"}
-        userVar0 = usermod["user0"] | userVar0; //if "user0" key exists in JSON, update, else keep old value
         stopWatchEnabled = usermod["stopWatchEnable"] | stopWatchEnabled;
         stopWatchReset = usermod["stopWatchReset"] | stopWatchReset;
         stopWatchPause = usermod["stopWatchPause"] | stopWatchPause;
@@ -440,7 +432,7 @@ class UsermodTimer : public Usermod {
      */
     void handleOverlayDraw()
     {
-      if (enabled) {
+      if (stopWatchEnabled || countdownEnabled) {
       // strip.setPixelColor(0, RGBW32(0,0,0,0)); // set the first pixel to black
 
         
