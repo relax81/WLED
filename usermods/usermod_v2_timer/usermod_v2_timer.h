@@ -35,7 +35,6 @@ class UsermodTimer : public Usermod {
     unsigned long stopwatchStartTime = 0;
     unsigned long elapsedTime = 0;
     unsigned long stopwatchCurrentSecond = 0;
-    unsigned long stopwatchLastUpdate = 0;
     const unsigned long updateInterval = 10; // update every 1000ms (1 second)
 
     // Countdown
@@ -120,8 +119,8 @@ class UsermodTimer : public Usermod {
         int seconds = stopwatchCurrentSecond % 60;
 
         // check if it's time to update the display
-        if (now - stopwatchLastUpdate >= updateInterval) {
-          if (hours > 0) {
+
+        if (hours > 0) {
             // format name in hh:mm format
             sprintf(name, "%02d:%02d", hours, minutes);
             }
@@ -129,8 +128,7 @@ class UsermodTimer : public Usermod {
             // format in mm:ss format 
             sprintf(name, "%02d:%02d", minutes, seconds);
           }
-        stopwatchLastUpdate = now; // update the last update time
-        }
+
     }
 
     void pauseStopwatch(){
@@ -192,18 +190,16 @@ class UsermodTimer : public Usermod {
         int countdownDisplaySeconds = countdownCurrentSecond % 60;
 
         
-          // check if it's time to update the display
-          if (now - countdownLastUpdate >= updateInterval) {
-            if (countdownDisplayHours > 0) {
-              // format name in hh:mm format
-              sprintf(name, "%02d:%02d", countdownDisplayHours, countdownDisplayMinutes);
-              }
-            else {
-              // format in mm:ss format 
-              sprintf(name, "%02d:%02d", countdownDisplayMinutes, countdownDisplaySeconds);
+        // check if it's time to update the display
+        if (countdownDisplayHours > 0) {
+            // format name in hh:mm format
+            sprintf(name, "%02d:%02d", countdownDisplayHours, countdownDisplayMinutes);
             }
-            countdownLastUpdate = now; // update the last update time
+          else {
+            // format in mm:ss format 
+            sprintf(name, "%02d:%02d", countdownDisplayMinutes, countdownDisplaySeconds);
           }
+          countdownLastUpdate = now; // update the last update time
     }
 
 
