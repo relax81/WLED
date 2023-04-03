@@ -1,4 +1,5 @@
 /// Notes
+// timerMode (0 = Nothing, 1 = Stopwatch, 2 = Countdown)
 /// Change Text Color ///
 // {"seg":{"col":[[0,255,255],[0,0,0],[0,0,0]]}} changes the text color
 /// Stopwatch ///
@@ -26,11 +27,14 @@ class UsermodTimer : public Usermod {
     bool initDone = false;
     unsigned long lastTime = 0;
     bool effectOld = 0;
+    int timerMode = 0;
+    unsigned long now = 0;
 
     // Stopwatch
     bool stopWatchEnabled = false;
     bool stopWatchReset = true;
     bool stopWatchPause = false;
+    bool stopWatchPaused = false;
     char name[10] = "0";
     unsigned long stopwatchStartTime = 0;
     unsigned long elapsedTime = 0;
@@ -94,8 +98,8 @@ class UsermodTimer : public Usermod {
 
 
     void stopwatch() {
-      unsigned long now = millis();
-        
+
+
         if (effectCurrent != 122) {
           effectOld = effectCurrent;
           effectCurrent = 122;
@@ -107,7 +111,7 @@ class UsermodTimer : public Usermod {
           stopWatchReset = false;
         }
         
-        if (stopWatchEnabled == true) {
+        if ((timerMode == 1) && (stopWatchPaused == false)) {
           elapsedTime = now - stopwatchStartTime;
         }
         
@@ -128,18 +132,17 @@ class UsermodTimer : public Usermod {
             // format in mm:ss format 
             sprintf(name, "%02d:%02d", minutes, seconds);
           }
-
     }
 
     void pauseStopwatch(){
-      stopWatchEnabled = !stopWatchEnabled;
-      if (stopWatchEnabled) {
+      stopWatchPaused = !stopWatchPaused;
+      Serial.println(stopWatchPaused);
+      if (stopWatchPaused) {
         stopwatchStartTime = millis() - elapsedTime;
       }
     }
 
     void countdown() {
-      unsigned long now = millis();
       
       if (effectCurrent != 122) {
           effectOld = effectCurrent;
@@ -241,16 +244,28 @@ class UsermodTimer : public Usermod {
       // NOTE: on very long strips strip.isUpdating() may always return true so update accordingly
       if (!enabled || strip.isUpdating()) return;
       
-      // do your magic here
-      if (stopWatchEnabled == true) {
-        stopwatch();
+      now = millis();
+      
+      switch (timerMode) {
+        case 0:
+          // do something for timerMode == 0
+          break;
+        case 1:
+          // do something for timerMode == 1
+          stopwatch();
+          break;
+        case 2:
+          // do something for timerMode == 2
+          countdown();
+          break;
+        default:
+          // do something if timerMode is not 0, 1, or 2
+          break;
       }
-      if (stopWatchPause == true && stopWatchEnabled == true) {
+
+      if (stopWatchPause == true && timerMode == 1) {
         pauseStopwatch();
         stopWatchPause = false;
-      }
-      if (countdownEnabled == true) {
-        countdown();
       }
     }
 
@@ -302,6 +317,7 @@ class UsermodTimer : public Usermod {
       usermod["countdownMultiplicator"] = countdownMultiplicator;
       usermod["countdownPause"] = countdownPause;
       usermod["countdownFinished"] = countdownFinished;
+      usermod["timerMode"] = timerMode;
     }
 
 
@@ -324,6 +340,7 @@ class UsermodTimer : public Usermod {
         countdownTimeJson = usermod["countdownTime"] | countdownTimeJson;
         countdownMultiplicator = usermod["countdownMultiplicator"] | countdownMultiplicator;
         countdownPause = usermod["countdownPause"] | countdownPause;
+        timerMode = usermod["timerMode"] | timerMode;
       }
       // you can as well check WLED state JSON keys
       //if (root["bri"] == 255) Serial.println(F("Don't burn down your garage!"));
@@ -370,10 +387,10 @@ class UsermodTimer : public Usermod {
       JsonObject top = root.createNestedObject(FPSTR(_name));
       top[FPSTR(_enabled)] = enabled;
       //save these vars persistently whenever settings are saved
-      top["stopWatch"] = stopWatchEnabled;
-      top["countdown"] = countdownEnabled; 
+      top["Timer Mode"] = timerMode;
       top["Countdown Time"] = countdownTimeJson;
       top["Countdown Multiplicator"] = countdownMultiplicator;
+
     }
 
 
@@ -402,8 +419,7 @@ class UsermodTimer : public Usermod {
       bool configComplete = !top.isNull();
 
       configComplete &= getJsonValue(top[FPSTR(_enabled)], enabled);
-      configComplete &= getJsonValue(top["stopWatch"], stopWatchEnabled);
-      configComplete &= getJsonValue(top["countdown"], countdownEnabled);
+      configComplete &= getJsonValue(top["Timer Mode"], timerMode); 
       configComplete &= getJsonValue(top["Countdown Time"], countdownTimeJson);
       configComplete &= getJsonValue(top["Countdown Multiplicator"], countdownMultiplicator);
       return configComplete;
@@ -418,6 +434,10 @@ class UsermodTimer : public Usermod {
     void appendConfigData()
     {
       oappend(SET_F("addInfo('")); oappend(String(FPSTR(_name)).c_str()); oappend(SET_F(":Countdown Time")); oappend(SET_F("',1,'<i>(hhmmss format)</i>');"));
+      oappend(SET_F("dd=addDropdown('")); oappend(String(FPSTR(_name)).c_str()); oappend(SET_F("','Timer Mode');"));
+      oappend(SET_F("addOption(dd,'Nothing',0);"));
+      oappend(SET_F("addOption(dd,'Stopwatch',1);"));
+      oappend(SET_F("addOption(dd,'Countdown',2);"));
     }
 
 
@@ -428,7 +448,7 @@ class UsermodTimer : public Usermod {
      */
     void handleOverlayDraw()
     {
-      if (stopWatchEnabled || countdownEnabled) {
+      if (timerMode != 0) {
       // strip.setPixelColor(0, RGBW32(0,0,0,0)); // set the first pixel to black
 
         
