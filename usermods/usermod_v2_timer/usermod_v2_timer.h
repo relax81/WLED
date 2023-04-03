@@ -3,11 +3,11 @@
 /// Change Text Color ///
 // {"seg":{"col":[[0,255,255],[0,0,0],[0,0,0]]}} changes the text color
 /// Stopwatch ///
-// {"UsermodTimer": {"stopWatchEnable": true}}  to start the stopwatch
+// {"UsermodTimer": {"timerMode": 1}} to start
+// {"UsermodTimer": {"stopWatchReset": true}}  to reset the stopwatch
 // {"UsermodTimer": {"stopWatchPause": true}}  pause stopwatch
-// {"UsermodTimer": {"stopWatchEnable": true, "stopWatchReset": true}} reset the stopwatch
 /// Countdown ///
-// {"UsermodTimer": {"countdownEnable": true, "countdownMultiplicator": 1, "countdownStart": true, "countdownTime": "001930"}}
+// {"UsermodTimer": {"timerMode": 2, "countdownMultiplicator": 1, "countdownStart": true, "countdownTime": "001930"}}
 // countdownMultiplicator can slow down or speed up the countdown speed
 // {"UsermodTimer": {"countdownPause": true}} pauses the countdown
 
@@ -31,18 +31,15 @@ class UsermodTimer : public Usermod {
     unsigned long now = 0;
 
     // Stopwatch
-    bool stopWatchEnabled = false;
     bool stopWatchReset = true;
     bool stopWatchPause = false;
     bool stopWatchPaused = false;
-    char name[10] = "0";
     unsigned long stopwatchStartTime = 0;
     unsigned long elapsedTime = 0;
     unsigned long stopwatchCurrentSecond = 0;
-    const unsigned long updateInterval = 10; // update every 1000ms (1 second)
 
     // Countdown
-    bool countdownEnabled = false;
+    char name[10] = "0";
     bool countdownStart = false;
     bool countdownPause = false;
     bool countdownFinished = false;
@@ -306,10 +303,8 @@ class UsermodTimer : public Usermod {
       if (usermod.isNull()) usermod = root.createNestedObject(FPSTR(_name));
 
       //usermod["user0"] = userVar0;
-      usermod["stopWatchEnable"] = stopWatchEnabled;
       usermod["stopWatchReset"] = stopWatchReset;
       usermod["stopWatchPause"] = stopWatchPause;
-      usermod["countdownEnable"] = countdownEnabled;
       usermod["countdownStart"] = countdownStart;
       usermod["countdownTime"] = countdownTimeJson;
       usermod["countdownMultiplicator"] = countdownMultiplicator;
@@ -330,10 +325,8 @@ class UsermodTimer : public Usermod {
       JsonObject usermod = root[FPSTR(_name)];
       if (!usermod.isNull()) {
         // expect JSON usermod data in usermod name object: {"ExampleUsermod:{"user0":10}"}
-        stopWatchEnabled = usermod["stopWatchEnable"] | stopWatchEnabled;
         stopWatchReset = usermod["stopWatchReset"] | stopWatchReset;
         stopWatchPause = usermod["stopWatchPause"] | stopWatchPause;
-        countdownEnabled = usermod["countdownEnable"] | countdownEnabled;
         countdownStart = usermod["countdownStart"] | countdownStart;
         countdownTimeJson = usermod["countdownTime"] | countdownTimeJson;
         countdownMultiplicator = usermod["countdownMultiplicator"] | countdownMultiplicator;
