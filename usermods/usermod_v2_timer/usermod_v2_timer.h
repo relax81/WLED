@@ -482,39 +482,6 @@ class UsermodTimer : public Usermod {
     }
   
 
-#ifndef WLED_DISABLE_MQTT
-    /**
-     * handling of MQTT message
-     * topic only contains stripped topic (part after /wled/MAC)
-     */
-    bool onMqttMessage(char* topic, char* payload) {
-      // check if we received a command
-      //if (strlen(topic) == 8 && strncmp_P(topic, PSTR("/command"), 8) == 0) {
-      //  String action = payload;
-      //  if (action == "on") {
-      //    enabled = true;
-      //    return true;
-      //  } else if (action == "off") {
-      //    enabled = false;
-      //    return true;
-      //  } else if (action == "toggle") {
-      //    enabled = !enabled;
-      //    return true;
-      //  }
-      //}
-      return false;
-    }
-
-    /**
-     * onMqttConnect() is called when MQTT connection is established
-     */
-    void onMqttConnect(bool sessionPresent) {
-      // do any MQTT related initialisation here
-      //publishMqtt("I am alive!");
-    }
-#endif
-
-
     /**
      * onStateChanged() is used to detect WLED state change
      * @mode parameter is CALL_MODE_... parameter used for notifications
